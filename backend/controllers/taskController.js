@@ -52,13 +52,16 @@ export const deleteTask = async (req, res) => {
     const task = await Task.findById(req.params.id);
 
     if (!task) return res.status(404).json({ message: "Task not found" });
-    if (task.user.toString() !== req.user._id.toString()) {
+
+    // safer check
+    if (!task.user || task.user.toString() !== req.user._id.toString()) {
       return res.status(403).json({ message: "Forbidden" });
     }
 
-    await task.remove();
-    res.json({ message: "Task removed" });
+    await task.deleteOne();
+    res.json({ message: "Task removed", id: task._id });
   } catch (err) {
+    console.error("Delete task error:", err); // logs actual error
     res.status(500).json({ message: "Server error", error: err.message });
   }
 };
