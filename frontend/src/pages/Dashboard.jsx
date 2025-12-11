@@ -112,8 +112,8 @@ export default function Dashboard() {
                 {...register("status")}
                 className="px-3 py-2 rounded-md bg-white/10 border border-white/20 outline-none focus:ring-2 focus:ring-blue-500"
               >
-                <option value="pending">Pending</option>
-                <option value="completed">Completed</option>
+                <option value="pending" className="text-black"> Pending</option>
+                <option value="completed" className="text-black">Completed</option>
               </select>
             </div>
 
