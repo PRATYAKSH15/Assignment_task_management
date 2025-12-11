@@ -1,12 +1,6 @@
 import { useState } from "react";
 import api from "../api/axios";
 
-/**
- * Props:
- * - task: the task object
- * - onUpdated: callback to refresh parent list or update state (called with updated task)
- * - onDeleted: callback when deleted (optional)
- */
 export default function TaskCard({ task, onUpdated, onDeleted }) {
   const [loading, setLoading] = useState(false);
 
