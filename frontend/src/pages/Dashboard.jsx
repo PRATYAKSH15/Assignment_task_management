@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import Navbar from "../components/Navbar";
 import TaskCard from "../components/TaskCard";
 import api from "../api/axios";
-
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -18,8 +17,9 @@ export default function Dashboard() {
   const [tasks, setTasks] = useState([]);
   const [loadingTasks, setLoadingTasks] = useState(true);
   const [adding, setAdding] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [taskData, setTaskData] = useState(null);
 
-  // React Hook Form
   const {
     register,
     handleSubmit,
@@ -30,7 +30,6 @@ export default function Dashboard() {
     defaultValues: { status: "pending" },
   });
 
-  // Fetch all tasks
   const fetchTasks = async () => {
     setLoadingTasks(true);
     try {
@@ -47,41 +46,49 @@ export default function Dashboard() {
     fetchTasks();
   }, []);
 
-  // Add task handler
-  const onAddTask = async (data) => {
+  // Instead of immediately adding, show confirmation modal
+  const onAddTask = (data) => {
+    setTaskData(data);
+    setShowConfirm(true);
+  };
+
+  const confirmAdd = async () => {
+    setShowConfirm(false);
+    if (!taskData) return;
+
     setAdding(true);
     try {
-      const res = await api.post("/tasks", data);
+      const res = await api.post("/tasks", taskData);
       setTasks((prev) => [res.data, ...prev]); // Add at top
       reset();
     } catch (err) {
       alert(err.response?.data?.message || "Failed to create task");
     } finally {
       setAdding(false);
+      setTaskData(null);
     }
   };
 
-  // Callback passed to TaskCard → update single task
+  const cancelAdd = () => {
+    setShowConfirm(false);
+    setTaskData(null);
+  };
+
   const handleUpdated = (updatedTask) => {
     setTasks((prev) =>
       prev.map((t) => (t._id === updatedTask._id ? updatedTask : t))
     );
   };
 
-  // Callback passed to TaskCard → remove deleted task
   const handleDeleted = (id) => {
     setTasks((prev) => prev.filter((t) => t._id !== id));
   };
 
   return (
     <div className="min-h-screen bg-linear-to-br from-slate-900 via-slate-800 to-slate-900 text-white">
-
-      {/* Navbar */}
       <Navbar />
 
       <div className="max-w-4xl mx-auto px-4 py-6">
-
-        {/* Header */}
         <h1 className="text-3xl font-bold mb-6">Welcome back 👋</h1>
 
         {/* Add Task Form */}
@@ -92,7 +99,6 @@ export default function Dashboard() {
             onSubmit={handleSubmit(onAddTask)}
             className="grid grid-cols-1 md:grid-cols-2 gap-4"
           >
-            {/* Title */}
             <div className="flex flex-col gap-1">
               <label className="text-sm opacity-80">Title</label>
               <input
@@ -105,19 +111,21 @@ export default function Dashboard() {
               )}
             </div>
 
-            {/* Status */}
             <div className="flex flex-col gap-1">
               <label className="text-sm opacity-80">Status</label>
               <select
                 {...register("status")}
                 className="px-3 py-2 rounded-md bg-white/10 border border-white/20 outline-none focus:ring-2 focus:ring-blue-500"
               >
-                <option value="pending" className="text-black"> Pending</option>
-                <option value="completed" className="text-black">Completed</option>
+                <option value="pending" className="text-black">
+                  Pending
+                </option>
+                <option value="completed" className="text-black">
+                  Completed
+                </option>
               </select>
             </div>
 
-            {/* Description */}
             <div className="flex flex-col gap-1 md:col-span-2">
               <label className="text-sm opacity-80">Description</label>
               <textarea
@@ -137,6 +145,31 @@ export default function Dashboard() {
             </button>
           </form>
         </div>
+
+        {/* Confirmation Modal */}
+        {showConfirm && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <div className="bg-slate-800 text-white rounded-xl p-6 w-96 shadow-lg">
+              <h3 className="text-lg font-semibold mb-4">
+                Are you sure you want to add this task?
+              </h3>
+              <div className="flex justify-end gap-4">
+                <button
+                  onClick={cancelAdd}
+                  className="px-4 py-2 bg-red-600 hover:bg-red-700 rounded-md"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmAdd}
+                  className="px-4 py-2 bg-green-600 hover:bg-green-700 rounded-md"
+                >
+                  Yes, Add
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Task List */}
         <h2 className="text-2xl font-semibold mb-4">Your Tasks</h2>
@@ -161,4 +194,3 @@ export default function Dashboard() {
     </div>
   );
 }
-
